@@ -1,3 +1,4 @@
 bios/
-*.BIN
 *.bin
+*.BIN
+build/
