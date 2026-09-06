@@ -13,6 +13,9 @@ public:
     void step();
 
 private:
+    void execute(uint32_t instruction);
+    void executeLui(uint32_t instruction);
+
     Bus& bus_;
 
     std::array<uint32_t, 32> registers_{};

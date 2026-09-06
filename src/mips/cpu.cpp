@@ -33,9 +33,45 @@ void Cpu::step()
               << " INSTRUCTION=0x" << std::setw(8) << instruction
               << '\n';
 
+    // Advance before execution to support MIPS branch delay slots later.
     pc_ = nextPc_;
     nextPc_ += 4;
+
+    execute(instruction);
 
     // MIPS register $zero must always contain zero.
     registers_[0] = 0;
 }
+
+void Cpu::execute(uint32_t instruction)
+{
+    const uint32_t opcode = instruction >> 26;
+
+    switch (opcode) {
+        case 0x0F:
+            executeLui(instruction);
+            break;
+
+        default:
+            std::cerr << "Unsupported opcode: 0x"
+                      << std::hex << std::uppercase
+                      << opcode << '\n';
+            break;
+    }
+}
+
+void Cpu::executeLui(uint32_t instruction)
+{
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t immediate = instruction & 0xFFFF;
+
+    registers_[rt] = immediate << 16;
+
+    std::cout << "  LUI r" << std::dec << rt
+              << ", 0x" << std::hex << std::uppercase
+              << immediate
+              << " -> 0x" << registers_[rt]
+              << '\n';
+}
+
+
