@@ -130,24 +130,6 @@ void Cpu::executeLui(uint32_t instruction)
               << '\n';
 }
 
-void Cpu::executeOri(uint32_t instruction)
-{
-    
-    const uint32_t rs = (instruction >> 21) & 0x1F;
-    const uint32_t rt = (instruction >> 16) & 0x1F;
-    const uint32_t immediate = instruction & 0xFFFF;
-
-    registers_[rt] = registers_[rs] | immediate;
-
-
-    std::cout << "  ORI r" << std::dec << rt
-            << ", r" << rs
-            << ", 0x" << std::hex << std::uppercase
-            << immediate
-            << " -> 0x" << registers_[rt]
-            << '\n';
-
-}
 
 //  31..26 |25..21|20..16|15..11|10..6 |  5..0  |
 //   6bit  | 5bit | 5bit | 5bit | 5bit |  6bit  |
@@ -382,3 +364,131 @@ void Cpu::executeSltiu(uint32_t instruction)
               << '\n';
 }
 
+
+void Cpu::executeAnd(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t result = registers_[rs] & registers_[rt];
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  AND r" << std::dec << rd
+              << ", r" << rs
+              << ", r" << rt
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeOr(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t result = registers_[rs] | registers_[rt];
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  OR r" << std::dec << rd
+              << ", r" << rs
+              << ", r" << rt
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeXor(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t result = registers_[rs] ^ registers_[rt];
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  XOR r" << std::dec << rd
+              << ", r" << rs
+              << ", r" << rt
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeNor(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t result = ~(registers_[rs] | registers_[rt]);
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  NOR r" << std::dec << rd
+              << ", r" << rs
+              << ", r" << rt
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeAndi(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t immediate = instruction & 0xFFFF;
+
+    const uint32_t result = registers_[rs] & immediate;
+
+    if (rt != 0)
+        registers_[rt] = result;
+
+    std::cout << "  ANDI r" << std::dec << rt
+              << ", r" << rs
+              << ", 0x" << std::hex
+              << std::uppercase << immediate
+              << " -> 0x" << result << '\n';
+}
+
+
+void Cpu::executeXori(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t immediate = instruction & 0xFFFF;
+
+    const uint32_t result = registers_[rs] ^ immediate;
+
+    if (rt != 0)
+        registers_[rt] = result;
+
+    std::cout << "  XORI r" << std::dec << rt
+              << ", r" << rs
+              << ", 0x" << std::hex
+              << std::uppercase << immediate
+              << " -> 0x" << result << '\n';
+}
+
+void Cpu::executeOri(uint32_t instruction)
+{
+    
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t immediate = instruction & 0xFFFF;
+
+    registers_[rt] = registers_[rs] | immediate;
+
+
+    std::cout << "  ORI r" << std::dec << rt
+            << ", r" << rs
+            << ", 0x" << std::hex << std::uppercase
+            << immediate
+            << " -> 0x" << registers_[rt]
+            << '\n';
+
+}

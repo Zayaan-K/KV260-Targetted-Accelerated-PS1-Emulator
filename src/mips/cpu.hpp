@@ -15,7 +15,7 @@ public:
 private:
     void execute(uint32_t instruction);
     void executeSpecial(uint32_t instruction);
-    void executeLui(uint32_t instruction);
+    
 
 
     //ALU
@@ -41,7 +41,10 @@ private:
     void executeOri(uint32_t instruction);
     void executeXori(uint32_t instruction);
 
-    
+    //load
+    void executeLui(uint32_t instruction);
+
+
 
     Bus& bus_;
 
