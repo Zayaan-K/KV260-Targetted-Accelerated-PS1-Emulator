@@ -15,7 +15,32 @@ public:
 private:
     void execute(uint32_t instruction);
     void executeLui(uint32_t instruction);
+
+
+    //ALU
+
+    void executeAdd(uint32_t instruction);
+    void executeAddu(uint32_t instruction);
+    void executeSub(uint32_t instruction);
+    void executeSubu(uint32_t instruction);
+    void executeAddi(uint32_t instruction);
+    void executeAddiu(uint32_t instruction);
+
+    void executeSlt(uint32_t instruction);
+    void executeSltu(uint32_t instruction);
+    void executeSlti(uint32_t instruction);
+    void executeSltiu(uint32_t instruction);
+
+
+    void executeAnd(uint32_t instruction);
+    void executeOr(uint32_t instruction);
+    void executeXor(uint32_t instruction);
+    void executeNor(uint32_t instruction);
+    void executeAndi(uint32_t instruction);
     void executeOri(uint32_t instruction);
+    void executeXori(uint32_t instruction);
+
+    
 
     Bus& bus_;
 

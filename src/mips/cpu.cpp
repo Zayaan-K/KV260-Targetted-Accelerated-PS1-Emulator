@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <iostream>
 
+#include <stdexcept>
+
 Cpu::Cpu(Bus& bus)
     : bus_(bus)
 {
@@ -48,6 +50,9 @@ void Cpu::execute(uint32_t instruction)
     const uint32_t opcode = instruction >> 26;
 
     switch (opcode) {
+        case 0x00:
+            executeSpecial(instruction);
+            break;
         case 0x0F:
             executeLui(instruction);
             break;
@@ -96,4 +101,47 @@ void Cpu::executeOri(uint32_t instruction)
 
 }
 
+//  31..26 |25..21|20..16|15..11|10..6 |  5..0  |
+//   6bit  | 5bit | 5bit | 5bit | 5bit |  6bit  |
+//  -------+------+------+------+------+--------+------------
+// 000000 | rs   | rt   | rd   | N/A  | 10xxxx | alu-reg
 
+void Cpu::executeAdd(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t a = registers_[rs];
+    const uint32_t b = registers_[rt];
+    const uint32_t result = a + b;
+
+    const bool overflow =
+        ((~(a ^ b) & (a ^ result)) & 0x80000000U) != 0;
+
+    if (overflow) {
+        throw std::overflow_error("MIPS ADD signed overflow");
+    }
+
+    registers_[rd] = result;
+}
+
+void Cpu::executeSub(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t a = registers_[rs];
+    const uint32_t b = registers_[rt];
+    const uint32_t result = a - b;
+
+    const bool overflow =
+        (((a ^ b) & (a ^ result)) & 0x80000000U) != 0;
+
+    if (overflow) {
+        throw std::overflow_error("MIPS SUB signed overflow");
+    }
+
+    registers_[rd] = result;
+}
