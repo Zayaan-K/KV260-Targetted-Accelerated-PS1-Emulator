@@ -172,3 +172,58 @@ void Cpu::executeSubu(uint32_t instruction)
 
     registers_[rd] = result;
 }
+
+
+//31........26 25.....21 20.....16 15................0
+//   opcode        rs        rt          immediate
+//   001000       source destination    signed 16-bit
+
+void Cpu::executeAddi (uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+
+    const int32_t signedImmediate = static_cast<int16_t>(instruction & 0xFFFF);
+
+
+    const uint32_t a = registers_[rs];
+    const uint32_t b = static_cast<uint32_t>(signedImmediate);
+    const uint32_t result = a + b;
+
+    const bool overflow =
+        ((~(a ^ b) & (a ^ result)) & 0x80000000U) != 0;
+
+    if (overflow) {
+        throw std::overflow_error("MIPS ADDI signed overflow");
+    }
+
+    registers_[rt] = result;
+
+    std::cout << "  ADDI r" << std::dec << rt
+              << ", r" << rs
+              << ", " << signedImmediate
+              << " -> 0x" << std::hex << std::uppercase
+              << registers_[rt]
+              << '\n';
+}
+
+
+
+void Cpu::executeAddiu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t signedImmediate = static_cast<int16_t>(instruction & 0xFFFF);
+
+    registers_[rt] = registers_[rs] + static_cast<uint32_t>(signedImmediate);
+
+    std::cout << "  ADDIU r" << std::dec << rt
+              << ", r" << rs
+              << ", " << signedImmediate
+              << " -> 0x" << std::hex << std::uppercase
+              << registers_[rt]
+              << '\n';
+}
+
+
