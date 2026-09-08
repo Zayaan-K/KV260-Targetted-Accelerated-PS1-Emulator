@@ -51,6 +51,9 @@ void Cpu::execute(uint32_t instruction)
         case 0x0F:
             executeLui(instruction);
             break;
+        case 0x0D:
+            executeOri(instruction);
+            break;
 
         default:
             std::cerr << "Unsupported opcode: 0x"
@@ -72,6 +75,25 @@ void Cpu::executeLui(uint32_t instruction)
               << immediate
               << " -> 0x" << registers_[rt]
               << '\n';
+}
+
+void Cpu::executeOri(uint32_t instruction)
+{
+    
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t immediate = instruction & 0xFFFF;
+
+    registers_[rt] = registers_[rs] | immediate;
+
+
+    std::cout << "  ORI r" << std::dec << rt
+            << ", r" << rs
+            << ", 0x" << std::hex << std::uppercase
+            << immediate
+            << " -> 0x" << registers_[rt]
+            << '\n';
+
 }
 
 

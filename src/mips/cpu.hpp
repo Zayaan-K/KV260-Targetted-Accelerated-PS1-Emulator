@@ -15,6 +15,7 @@ public:
 private:
     void execute(uint32_t instruction);
     void executeLui(uint32_t instruction);
+    void executeOri(uint32_t instruction);
 
     Bus& bus_;
 

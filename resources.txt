@@ -1,0 +1,3 @@
+https://psx-spx.consoledev.net/cpuspecifications/
+
+https://student.cs.uwaterloo.ca/~cs350/common/r3000-manual.pdf
