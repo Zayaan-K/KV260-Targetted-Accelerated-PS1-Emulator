@@ -145,3 +145,30 @@ void Cpu::executeSub(uint32_t instruction)
 
     registers_[rd] = result;
 }
+
+
+void Cpu::executeAddu (uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t a = registers_[rs];
+    const uint32_t b = registers_[rt];
+    const uint32_t result = a + b;
+
+    registers_[rd] = result;
+}
+
+void Cpu::executeSubu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t a = registers_[rs];
+    const uint32_t b = registers_[rt];
+    const uint32_t result = a - b;
+
+    registers_[rd] = result;
+}
