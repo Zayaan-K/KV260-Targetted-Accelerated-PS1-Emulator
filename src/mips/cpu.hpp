@@ -14,6 +14,7 @@ public:
 
 private:
     void execute(uint32_t instruction);
+    void executeSpecial(uint32_t instruction);
     void executeLui(uint32_t instruction);
 
 
