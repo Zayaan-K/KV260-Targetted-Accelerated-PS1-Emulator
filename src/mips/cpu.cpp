@@ -68,6 +68,54 @@ void Cpu::execute(uint32_t instruction)
     }
 }
 
+
+void Cpu::executeSpecial(uint32_t instruction)
+{
+    const uint32_t funct = instruction & 0x3F;
+
+    switch (funct) {
+        case 0x00: executeSll(instruction);     break;
+        case 0x02: executeSrl(instruction);     break;
+        case 0x03: executeSra(instruction);     break;
+        case 0x04: executeSllv(instruction);    break;
+        case 0x06: executeSrlv(instruction);    break;
+        case 0x07: executeSrav(instruction);    break;
+
+        case 0x08: executeJr(instruction);      break;
+        case 0x09: executeJalr(instruction);    break;
+
+        case 0x0C: executeSyscall(instruction); break;
+        case 0x0D: executeBreak(instruction);   break;
+
+        case 0x10: executeMfhi(instruction);    break;
+        case 0x11: executeMthi(instruction);    break;
+        case 0x12: executeMflo(instruction);    break;
+        case 0x13: executeMtlo(instruction);    break;
+
+        case 0x18: executeMult(instruction);    break;
+        case 0x19: executeMultu(instruction);   break;
+        case 0x1A: executeDiv(instruction);     break;
+        case 0x1B: executeDivu(instruction);    break;
+
+        case 0x20: executeAdd(instruction);     break;
+        case 0x21: executeAddu(instruction);    break;
+        case 0x22: executeSub(instruction);     break;
+        case 0x23: executeSubu(instruction);    break;
+        case 0x24: executeAnd(instruction);     break;
+        case 0x25: executeOr(instruction);      break;
+        case 0x26: executeXor(instruction);     break;
+        case 0x27: executeNor(instruction);     break;
+        case 0x2A: executeSlt(instruction);     break;
+        case 0x2B: executeSltu(instruction);    break;
+
+        default:
+            std::cerr << "Unsupported SPECIAL function: 0x"
+                      << std::hex << std::uppercase
+                      << funct << '\n';
+            break;
+    }
+}
+
 void Cpu::executeLui(uint32_t instruction)
 {
     const uint32_t rt = (instruction >> 16) & 0x1F;
