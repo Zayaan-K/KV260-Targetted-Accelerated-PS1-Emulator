@@ -124,6 +124,14 @@ void Cpu::executeAdd(uint32_t instruction)
     }
 
     registers_[rd] = result;
+
+
+    std::cout << "  ADD r" << std::dec << rd
+            << ", r" << rs
+            << ", r" << rt
+            << " -> 0x" << std::hex << std::uppercase
+            << registers_[rd]
+            << '\n';
 }
 
 void Cpu::executeSub(uint32_t instruction)
@@ -144,6 +152,13 @@ void Cpu::executeSub(uint32_t instruction)
     }
 
     registers_[rd] = result;
+
+    std::cout << "  SUB r" << std::dec << rd
+            << ", r" << rs
+            << ", r" << rt
+            << " -> 0x" << std::hex << std::uppercase
+            << registers_[rd]
+            << '\n';
 }
 
 
@@ -158,6 +173,14 @@ void Cpu::executeAddu (uint32_t instruction)
     const uint32_t result = a + b;
 
     registers_[rd] = result;
+
+    std::cout << "  ADDU r" << std::dec << rd
+            << ", r" << rs
+            << ", r" << rt
+            << " -> 0x" << std::hex << std::uppercase
+            << registers_[rd]
+            << '\n';
+
 }
 
 void Cpu::executeSubu(uint32_t instruction)
@@ -171,7 +194,14 @@ void Cpu::executeSubu(uint32_t instruction)
     const uint32_t result = a - b;
 
     registers_[rd] = result;
-}
+
+    std::cout << "  SUBU r" << std::dec << rd
+            << ", r" << rs
+            << ", r" << rt
+            << " -> 0x" << std::hex << std::uppercase
+            << registers_[rd]
+            << '\n';
+    }
 
 
 //31........26 25.....21 20.....16 15................0
