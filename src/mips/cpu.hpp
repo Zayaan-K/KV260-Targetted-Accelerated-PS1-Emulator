@@ -31,6 +31,7 @@ private:
     void executeSltu(uint32_t instruction);
     void executeSlti(uint32_t instruction);
     void executeSltiu(uint32_t instruction);
+    
 
 
     void executeAnd(uint32_t instruction);
@@ -41,9 +42,13 @@ private:
     void executeOri(uint32_t instruction);
     void executeXori(uint32_t instruction);
 
-    //load
+    void executeSllv(uint32_t instruction);
+    void executeSrlv(uint32_t instruction);
+    void executeSrav(uint32_t instruction);
+    void executeSll(uint32_t instruction);
+    void executeSrl(uint32_t instruction);
+    void executeSra(uint32_t instruction);
     void executeLui(uint32_t instruction);
-
 
 
     Bus& bus_;
