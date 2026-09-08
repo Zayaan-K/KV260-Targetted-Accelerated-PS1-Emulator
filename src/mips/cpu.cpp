@@ -116,19 +116,6 @@ void Cpu::executeSpecial(uint32_t instruction)
     }
 }
 
-void Cpu::executeLui(uint32_t instruction)
-{
-    const uint32_t rt = (instruction >> 16) & 0x1F;
-    const uint32_t immediate = instruction & 0xFFFF;
-
-    registers_[rt] = immediate << 16;
-
-    std::cout << "  LUI r" << std::dec << rt
-              << ", 0x" << std::hex << std::uppercase
-              << immediate
-              << " -> 0x" << registers_[rt]
-              << '\n';
-}
 
 
 //  31..26 |25..21|20..16|15..11|10..6 |  5..0  |
@@ -491,4 +478,139 @@ void Cpu::executeOri(uint32_t instruction)
             << " -> 0x" << registers_[rt]
             << '\n';
 
+}
+
+
+void Cpu::executeSll(uint32_t instruction)
+{
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+    const uint32_t shiftAmount = (instruction >> 6) & 0x1F;
+
+    const uint32_t result = registers_[rt] << shiftAmount;
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  SLL r" << std::dec << rd
+              << ", r" << rt
+              << ", " << shiftAmount
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeSrl(uint32_t instruction)
+{
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+    const uint32_t shiftAmount = (instruction >> 6) & 0x1F;
+
+    const uint32_t result = registers_[rt] >> shiftAmount;
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  SRL r" << std::dec << rd
+              << ", r" << rt
+              << ", " << shiftAmount
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeSra(uint32_t instruction)
+{
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+    const uint32_t shiftAmount = (instruction >> 6) & 0x1F;
+
+    const int32_t signedValue =
+        static_cast<int32_t>(registers_[rt]);
+
+    const uint32_t result =
+        static_cast<uint32_t>(signedValue >> shiftAmount);
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  SRA r" << std::dec << rd
+              << ", r" << rt
+              << ", " << shiftAmount
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeSllv(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t shiftAmount = registers_[rs] & 0x1F;
+    const uint32_t result = registers_[rt] << shiftAmount;
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  SLLV r" << std::dec << rd
+              << ", r" << rt
+              << ", r" << rs
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeSrlv(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t shiftAmount = registers_[rs] & 0x1F;
+    const uint32_t result = registers_[rt] >> shiftAmount;
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  SRLV r" << std::dec << rd
+              << ", r" << rt
+              << ", r" << rs
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeSrav(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t shiftAmount = registers_[rs] & 0x1F;
+
+    const int32_t signedValue =
+        static_cast<int32_t>(registers_[rt]);
+
+    const uint32_t result =
+        static_cast<uint32_t>(signedValue >> shiftAmount);
+
+    if (rd != 0)
+        registers_[rd] = result;
+
+    std::cout << "  SRAV r" << std::dec << rd
+              << ", r" << rt
+              << ", r" << rs
+              << " -> 0x" << std::hex
+              << std::uppercase << result << '\n';
+}
+
+void Cpu::executeLui(uint32_t instruction)
+{
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t immediate = instruction & 0xFFFF;
+
+    registers_[rt] = immediate << 16;
+
+    std::cout << "  LUI r" << std::dec << rt
+              << ", 0x" << std::hex << std::uppercase
+              << immediate
+              << " -> 0x" << registers_[rt]
+              << '\n';
 }
