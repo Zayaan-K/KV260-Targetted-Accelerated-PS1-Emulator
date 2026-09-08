@@ -239,7 +239,6 @@ void Cpu::executeAddi (uint32_t instruction)
 }
 
 
-
 void Cpu::executeAddiu(uint32_t instruction)
 {
     const uint32_t rs = (instruction >> 21) & 0x1F;
@@ -256,4 +255,82 @@ void Cpu::executeAddiu(uint32_t instruction)
               << '\n';
 }
 
+
+void Cpu::executeSlt(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const int32_t a = static_cast<int32_t>(registers_[rs]);
+    const int32_t b = static_cast<int32_t>(registers_[rt]);
+
+    registers_[rd] = (a < b) ? 1U : 0U;
+
+    std::cout << "  SLT r" << std::dec << rd
+              << ", r" << rs
+              << ", r" << rt
+              << " -> " << registers_[rd]
+              << '\n';
+}
+
+void Cpu::executeSltu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t a = registers_[rs];
+    const uint32_t b = registers_[rt];
+
+    registers_[rd] = (a < b) ? 1U : 0U;
+
+    std::cout << "  SLTU r" << std::dec << rd
+              << ", r" << rs
+              << ", r" << rt
+              << " -> " << registers_[rd]
+              << '\n';
+}
+
+void Cpu::executeSlti(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const int32_t immediate =
+        static_cast<int16_t>(instruction & 0xFFFF);
+
+    const int32_t source =
+        static_cast<int32_t>(registers_[rs]);
+
+    registers_[rt] = (source < immediate) ? 1U : 0U;
+
+    std::cout << "  SLTI r" << std::dec << rt
+              << ", r" << rs
+              << ", " << immediate
+              << " -> " << registers_[rt]
+              << '\n';
+}
+
+
+void Cpu::executeSltiu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const int32_t signedImmediate =
+        static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t immediate =
+        static_cast<uint32_t>(signedImmediate);
+
+    registers_[rt] =
+        (registers_[rs] < immediate) ? 1U : 0U;
+
+    std::cout << "  SLTIU r" << std::dec << rt
+              << ", r" << rs
+              << ", " << signedImmediate
+              << " -> " << registers_[rt]
+              << '\n';
+}
 
