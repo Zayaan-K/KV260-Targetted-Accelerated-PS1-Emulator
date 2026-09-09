@@ -1,10 +1,11 @@
 #include "cpu.hpp"
-
 #include "../bus/bus.hpp"
-
 #include <iomanip>
 #include <iostream>
-
+#include <cstdint>
+#include <iomanip>
+#include <iostream>
+#include <limits>
 #include <stdexcept>
 
 Cpu::Cpu(Bus& bus)
@@ -47,23 +48,51 @@ void Cpu::step()
 
 void Cpu::execute(uint32_t instruction)
 {
-    const uint32_t opcode = instruction >> 26;
+    const uint32_t opcode = (instruction >> 26) & 0x3F;
 
-    switch (opcode) {
+    switch (opcode)
+    {
+
         case 0x00:
             executeSpecial(instruction);
             break;
-        case 0x0F:
-            executeLui(instruction);
+        case 0x02:
+            executeJ(instruction);
+            break;
+        case 0x03:
+            executeJal(instruction);
+            break;
+        case 0x08:
+            executeAddi(instruction);
+            break;
+        case 0x09:
+            executeAddiu(instruction);
+            break;
+        case 0x0A:
+            executeSlti(instruction);
+            break;
+        case 0x0B:
+            executeSltiu(instruction);
+            break;
+        case 0x0C:
+            executeAndi(instruction);
             break;
         case 0x0D:
             executeOri(instruction);
             break;
+        case 0x0E:
+            executeXori(instruction);
+            break;
+        case 0x0F:
+            executeLui(instruction);
+            break;
 
         default:
             std::cerr << "Unsupported opcode: 0x"
-                      << std::hex << std::uppercase
-                      << opcode << '\n';
+                      << std::hex
+                      << std::uppercase
+                      << opcode
+                      << '\n';
             break;
     }
 }
@@ -607,4 +636,158 @@ void Cpu::executeLui(uint32_t instruction)
               << immediate
               << " -> 0x" << registers_[rt]
               << '\n';
+}
+
+void Cpu::executeMult(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const int64_t lhs =
+        static_cast<int64_t>(static_cast<int32_t>(registers_[rs]));
+
+    const int64_t rhs =
+        static_cast<int64_t>(static_cast<int32_t>(registers_[rt]));
+
+    const int64_t signedResult = lhs * rhs;
+    const uint64_t result = static_cast<uint64_t>(signedResult);
+
+    lo_ = static_cast<uint32_t>(result);
+    hi_ = static_cast<uint32_t>(result >> 32);
+
+    std::cout << "  MULT r" << std::dec << rs
+              << ", r" << rt
+              << " -> HI=0x" << std::hex << std::uppercase << hi_
+              << " LO=0x" << lo_ << '\n';
+}
+
+
+void Cpu::executeMultu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const uint64_t lhs = registers_[rs];
+    const uint64_t rhs = registers_[rt];
+    const uint64_t result = lhs * rhs;
+
+    lo_ = static_cast<uint32_t>(result);
+    hi_ = static_cast<uint32_t>(result >> 32);
+
+    std::cout << "  MULTU r" << std::dec << rs
+              << ", r" << rt
+              << " -> HI=0x" << std::hex << std::uppercase << hi_
+              << " LO=0x" << lo_ << '\n';
+}
+
+void Cpu::executeDiv(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const int32_t dividend = static_cast<int32_t>(registers_[rs]);
+    const int32_t divisor  = static_cast<int32_t>(registers_[rt]);
+
+    if (divisor == 0)
+    {
+        // R3000A division-by-zero behavior:
+        // Negative dividend -> quotient 1
+        // Non-negative dividend -> quotient -1
+        lo_ = (dividend < 0) ? 1U : 0xFFFFFFFFU;
+        hi_ = static_cast<uint32_t>(dividend);
+    }
+    else if (
+        dividend == std::numeric_limits<int32_t>::min() &&
+        divisor == -1)
+    {
+        // Avoid signed division overflow:
+        // -2147483648 / -1 cannot be represented by int32_t.
+        lo_ = 0x80000000U;
+        hi_ = 0;
+    }
+    else
+    {
+        const int32_t quotient  = dividend / divisor;
+        const int32_t remainder = dividend % divisor;
+
+        lo_ = static_cast<uint32_t>(quotient);
+        hi_ = static_cast<uint32_t>(remainder);
+    }
+
+    std::cout << "  DIV r" << std::dec << rs
+              << ", r" << rt
+              << " -> HI=0x" << std::hex << std::uppercase << hi_
+              << " LO=0x" << lo_ << '\n';
+}
+
+
+void Cpu::executeDivu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const uint32_t dividend = registers_[rs];
+    const uint32_t divisor  = registers_[rt];
+
+    if (divisor == 0)
+    {
+        lo_ = 0xFFFFFFFFU;
+        hi_ = dividend;
+    }
+    else
+    {
+        lo_ = dividend / divisor;
+        hi_ = dividend % divisor;
+    }
+
+    std::cout << "  DIVU r" << std::dec << rs
+              << ", r" << rt
+              << " -> HI=0x" << std::hex << std::uppercase << hi_
+              << " LO=0x" << lo_ << '\n';
+}
+
+void Cpu::executeMfhi(uint32_t instruction)
+{
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    if (rd != 0)
+        registers_[rd] = hi_;
+
+    std::cout << "  MFHI r" << std::dec << rd
+              << " -> 0x" << std::hex
+              << std::uppercase << hi_ << '\n';
+}
+
+void Cpu::executeMflo(uint32_t instruction)
+{
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    if (rd != 0)
+        registers_[rd] = lo_;
+
+    std::cout << "  MFLO r" << std::dec << rd
+              << " -> 0x" << std::hex
+              << std::uppercase << lo_ << '\n';
+}
+
+void Cpu::executeMthi(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    hi_ = registers_[rs];
+
+    std::cout << "  MTHI r" << std::dec << rs
+              << " -> HI=0x" << std::hex
+              << std::uppercase << hi_ << '\n';
+}
+
+void Cpu::executeMtlo(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    lo_ = registers_[rs];
+
+    std::cout << "  MTLO r" << std::dec << rs
+              << " -> LO=0x" << std::hex
+              << std::uppercase << lo_ << '\n';
 }

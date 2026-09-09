@@ -50,6 +50,15 @@ private:
     void executeSra(uint32_t instruction);
     void executeLui(uint32_t instruction);
 
+    void executeMult(uint32_t instruction);
+    void executeMultu(uint32_t instruction);
+    void executeDiv(uint32_t instruction);
+    void executeDivu(uint32_t instruction);
+    void executeMfhi(uint32_t instruction);
+    void executeMflo(uint32_t instruction);
+    void executeMthi(uint32_t instruction);
+    void executeMtlo(uint32_t instruction);
+
 
     Bus& bus_;
 
