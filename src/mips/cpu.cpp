@@ -791,3 +791,16 @@ void Cpu::executeMtlo(uint32_t instruction)
               << " -> LO=0x" << std::hex
               << std::uppercase << lo_ << '\n';
 }
+
+//31          26 25                              0
+//+--------------+--------------------------------+
+//| opcode       |       26-bit target index      |
+//+--------------+--------------------------------+
+     6 bits                 26 bits
+void Cpu::executeJ(uint32_t instruction)
+{
+    const uint32_t opcode      = (instruction >> 26) & 0x3F;
+    const uint32_t targetIndex = instruction & 0x03FFFFFF;
+
+}
+
