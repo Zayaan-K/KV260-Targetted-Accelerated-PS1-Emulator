@@ -15,10 +15,10 @@ public:
 private:
     void execute(uint32_t instruction);
     void executeSpecial(uint32_t instruction);
-    
+    void executeRegimm(uint32_t instruction);
 
-
-    //ALU
+    void executeSyscall(uint32_t instruction);
+    void executeBreak(uint32_t instruction);
 
     void executeAdd(uint32_t instruction);
     void executeAddu(uint32_t instruction);
