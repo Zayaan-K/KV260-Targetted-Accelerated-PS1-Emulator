@@ -53,39 +53,24 @@ void Cpu::execute(uint32_t instruction)
     switch (opcode)
     {
 
-        case 0x00:
-            executeSpecial(instruction);
-            break;
-        case 0x02:
-            executeJ(instruction);
-            break;
-        case 0x03:
-            executeJal(instruction);
-            break;
-        case 0x08:
-            executeAddi(instruction);
-            break;
-        case 0x09:
-            executeAddiu(instruction);
-            break;
-        case 0x0A:
-            executeSlti(instruction);
-            break;
-        case 0x0B:
-            executeSltiu(instruction);
-            break;
-        case 0x0C:
-            executeAndi(instruction);
-            break;
-        case 0x0D:
-            executeOri(instruction);
-            break;
-        case 0x0E:
-            executeXori(instruction);
-            break;
-        case 0x0F:
-            executeLui(instruction);
-            break;
+        case 0x00: executeSpecial(instruction); break;
+        case 0x01: executeRegimm(instruction);  break;
+        case 0x02: executeJ(instruction);        break;
+        case 0x03: executeJal(instruction);      break;
+        case 0x04: executeBeq(instruction);      break;
+        case 0x05: executeBne(instruction);      break;
+        case 0x06: executeBlez(instruction);     break;
+        case 0x07: executeBgtz(instruction);     break;
+        case 0x08: executeAddi(instruction);     break;
+        case 0x09: executeAddiu(instruction);    break;
+        case 0x0A: executeSlti(instruction);     break;
+        case 0x0B: executeSltiu(instruction);    break;
+        case 0x0C: executeAndi(instruction);     break;
+        case 0x0D: executeOri(instruction);      break;
+        case 0x0E: executeXori(instruction);     break;
+        case 0x0F: executeLui(instruction);      break;
+
+
 
         default:
             std::cerr << "Unsupported opcode: 0x"
@@ -109,23 +94,18 @@ void Cpu::executeSpecial(uint32_t instruction)
         case 0x04: executeSllv(instruction);    break;
         case 0x06: executeSrlv(instruction);    break;
         case 0x07: executeSrav(instruction);    break;
-
         case 0x08: executeJr(instruction);      break;
         case 0x09: executeJalr(instruction);    break;
-
         case 0x0C: executeSyscall(instruction); break;
         case 0x0D: executeBreak(instruction);   break;
-
         case 0x10: executeMfhi(instruction);    break;
         case 0x11: executeMthi(instruction);    break;
         case 0x12: executeMflo(instruction);    break;
         case 0x13: executeMtlo(instruction);    break;
-
         case 0x18: executeMult(instruction);    break;
         case 0x19: executeMultu(instruction);   break;
         case 0x1A: executeDiv(instruction);     break;
         case 0x1B: executeDivu(instruction);    break;
-
         case 0x20: executeAdd(instruction);     break;
         case 0x21: executeAddu(instruction);    break;
         case 0x22: executeSub(instruction);     break;
