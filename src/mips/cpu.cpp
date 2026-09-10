@@ -18,6 +18,9 @@ void Cpu::reset()
 
     hi_ = 0;
     lo_ = 0;
+
+    pendingLoad_ = {};
+
 }
 
 void Cpu::step()
@@ -31,10 +34,17 @@ void Cpu::step()
               << " INSTRUCTION=0x" << std::setw(8)
               << instruction << '\n';
 
+    const PendingLoad previousLoad = pendingLoad_;
+    pendingLoad_ = {};
+
     pc_ = nextPc_;
     nextPc_ += 4;
 
     execute(instruction);
+
+    if (previousLoad.valid && previousLoad.destination != 0) {
+        registers_[previousLoad.destination] = previousLoad.value;
+    }
 
     registers_[0] = 0;
 }

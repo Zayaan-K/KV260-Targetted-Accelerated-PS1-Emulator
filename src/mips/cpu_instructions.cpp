@@ -1,11 +1,11 @@
 #include "cpu.hpp"
+#include "../bus/bus.hpp"
 
 #include <cstdint>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
-
 void Cpu::execute(uint32_t instruction)
 {
     const uint32_t opcode = (instruction >> 26) & 0x3F;
@@ -13,8 +13,8 @@ void Cpu::execute(uint32_t instruction)
     switch (opcode)
     {
 
-        case 0x00: executeSpecial(instruction); break;
-        case 0x01: executeRegimm(instruction);  break;
+        case 0x00: executeSpecial(instruction);  break;
+        case 0x01: executeRegimm(instruction);   break;
         case 0x02: executeJ(instruction);        break;
         case 0x03: executeJal(instruction);      break;
         case 0x04: executeBeq(instruction);      break;
@@ -29,16 +29,21 @@ void Cpu::execute(uint32_t instruction)
         case 0x0D: executeOri(instruction);      break;
         case 0x0E: executeXori(instruction);     break;
         case 0x0F: executeLui(instruction);      break;
+        case 0x20: executeLb(instruction);       break;
+        case 0x21: executeLh(instruction);       break;
+        case 0x23: executeLw(instruction);       break;
+        case 0x24: executeLbu(instruction);      break;
+        case 0x25: executeLhu(instruction);      break;
+        case 0x28: executeSb(instruction);       break;
+        case 0x29: executeSh(instruction);       break;
+        case 0x2B: executeSw(instruction);       break;
 
 
 
         default:
-            std::cerr << "Unsupported opcode: 0x"
-                      << std::hex
-                      << std::uppercase
-                      << opcode
-                      << '\n';
-            break;
+            throw std::runtime_error(
+                "Unsupported opcode: 0x" + std::to_string(opcode)
+            );
     }
 }
 
@@ -78,10 +83,9 @@ void Cpu::executeSpecial(uint32_t instruction)
         case 0x2B: executeSltu(instruction);    break;
 
         default:
-            std::cerr << "Unsupported SPECIAL function: 0x"
-                      << std::hex << std::uppercase
-                      << funct << '\n';
-            break;
+            throw std::runtime_error(
+                "Unsupported funct: 0x" + std::to_string(funct)
+            );
     }
 }
 
@@ -1075,3 +1079,211 @@ void Cpu::executeBreak(uint32_t instruction)
     throw std::runtime_error("MIPS BREAK exception not implemented");
 }
 
+void Cpu::scheduleLoad(uint32_t destination, uint32_t value)
+{
+    pendingLoad_.valid = destination != 0;
+    pendingLoad_.destination = destination;
+    pendingLoad_.value = value;
+}
+
+void Cpu::executeLb(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    const int8_t value = static_cast<int8_t>(bus_.read8(address));
+    const uint32_t result =
+        static_cast<uint32_t>(static_cast<int32_t>(value));
+
+    scheduleLoad(rt, result);
+
+    std::cout << "  LB r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << result
+              << '\n';
+}
+
+void Cpu::executeLbu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    const uint32_t result = bus_.read8(address);
+
+    scheduleLoad(rt, result);
+
+    std::cout << "  LBU r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << result
+              << '\n';
+}
+
+void Cpu::executeLh(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    if ((address & 0x1U) != 0) {
+        throw std::runtime_error("Unaligned LH address");
+    }
+
+    const int16_t value = static_cast<int16_t>(bus_.read16(address));
+    const uint32_t result =
+        static_cast<uint32_t>(static_cast<int32_t>(value));
+
+    scheduleLoad(rt, result);
+
+    std::cout << "  LH r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << result
+              << '\n';
+}
+
+void Cpu::executeLhu(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    if ((address & 0x1U) != 0) {
+        throw std::runtime_error("Unaligned LHU address");
+    }
+
+    const uint32_t result = bus_.read16(address);
+
+    scheduleLoad(rt, result);
+
+    std::cout << "  LHU r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << result
+              << '\n';
+}
+
+void Cpu::executeLw(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    if ((address & 0x3U) != 0) {
+        throw std::runtime_error("Unaligned LW address");
+    }
+
+    const uint32_t result = bus_.read32(address);
+
+    scheduleLoad(rt, result);
+
+    std::cout << "  LW r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << result
+              << '\n';
+}
+
+void Cpu::executeSb(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    const uint8_t value =
+        static_cast<uint8_t>(registers_[rt] & 0xFFU);
+
+    bus_.write8(address, value);
+
+    std::cout << "  SB r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << static_cast<uint32_t>(value)
+              << '\n';
+}
+
+void Cpu::executeSh(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    if ((address & 0x1U) != 0) {
+        throw std::runtime_error("Unaligned SH address");
+    }
+
+    const uint16_t value =
+        static_cast<uint16_t>(registers_[rt] & 0xFFFFU);
+
+    bus_.write16(address, value);
+
+    std::cout << "  SH r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << value
+              << '\n';
+}
+
+void Cpu::executeSw(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t address =
+        registers_[rs] + static_cast<uint32_t>(offset);
+
+    if ((address & 0x3U) != 0) {
+        throw std::runtime_error("Unaligned SW address");
+    }
+
+    const uint32_t value = registers_[rt];
+
+    bus_.write32(address, value);
+
+    std::cout << "  SW r" << std::dec << rt
+              << ", " << offset
+              << "(r" << rs << ")"
+              << " address=0x" << std::hex << std::uppercase
+              << address
+              << " value=0x" << value
+              << '\n';
+}

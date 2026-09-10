@@ -74,8 +74,30 @@ private:
     void executeBltzal(uint32_t instruction);
     void executeBgezal(uint32_t instruction);
 
+    void executeLb(uint32_t instruction);
+    void executeLbu(uint32_t instruction);
+    void executeLh(uint32_t instruction);
+    void executeLhu(uint32_t instruction);
+    void executeLw(uint32_t instruction);
+
+    void executeSb(uint32_t instruction);
+    void executeSh(uint32_t instruction);
+    void executeSw(uint32_t instruction);
+
+    void scheduleLoad(uint32_t destination, uint32_t value);
+
 
     Bus& bus_;
+
+    struct PendingLoad {
+    bool valid = false;
+    uint32_t destination = 0;
+    uint32_t value = 0;
+    };
+
+
+
+    PendingLoad pendingLoad_{};
 
     std::array<uint32_t, 32> registers_{};
 
