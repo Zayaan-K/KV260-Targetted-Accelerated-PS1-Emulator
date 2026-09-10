@@ -1051,3 +1051,27 @@ void Cpu::executeBgezal(uint32_t instruction)
 
     std::cout << '\n';
 }
+
+
+void Cpu::executeSyscall(uint32_t instruction)
+{
+    const uint32_t code = (instruction >> 6) & 0xFFFFF;
+
+    std::cout << "  SYSCALL code=0x"
+              << std::hex << std::uppercase
+              << code << '\n';
+
+    throw std::runtime_error("MIPS SYSCALL exception not implemented");
+}
+
+void Cpu::executeBreak(uint32_t instruction)
+{
+    const uint32_t code = (instruction >> 6) & 0xFFFFF;
+
+    std::cout << "  BREAK code=0x"
+              << std::hex << std::uppercase
+              << code << '\n';
+
+    throw std::runtime_error("MIPS BREAK exception not implemented");
+}
+
