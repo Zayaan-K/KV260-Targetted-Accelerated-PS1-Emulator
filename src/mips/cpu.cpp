@@ -125,7 +125,24 @@ void Cpu::executeSpecial(uint32_t instruction)
     }
 }
 
+void Cpu::executeRegimm(uint32_t instruction)
+{
+    const uint32_t rt = (instruction >> 16) & 0x1F;
 
+    switch (rt)
+    {
+        case 0x00: executeBltz(instruction); break;
+        case 0x01: executeBgez(instruction); break;
+        case 0x10: executeBltzal(instruction); break;
+        case 0x11: executeBgezal(instruction); break;
+
+        default:
+            std::cerr << "Unsupported REGIMM instruction: 0x"
+                      << std::hex << std::uppercase
+                      << rt << '\n';
+            break;
+    }
+}
 
 //  31..26 |25..21|20..16|15..11|10..6 |  5..0  |
 //   6bit  | 5bit | 5bit | 5bit | 5bit |  6bit  |
@@ -777,10 +794,72 @@ void Cpu::executeMtlo(uint32_t instruction)
 //| opcode       |       26-bit target index      |
 //+--------------+--------------------------------+
      6 bits                 26 bits
+
+
 void Cpu::executeJ(uint32_t instruction)
 {
-    const uint32_t opcode      = (instruction >> 26) & 0x3F;
-    const uint32_t targetIndex = instruction & 0x03FFFFFF;
+    const uint32_t targetIndex = instruction & 0x03FFFFFFU;
 
+    const uint32_t targetAddress = (pc_ & 0xF0000000U) | (targetIndex << 2);
+
+    nextPc_ = targetAddress;
+
+    std::cout << "  J 0x"
+              << std::hex << std::uppercase
+              << targetAddress << '\n';
 }
 
+void Cpu::executeJal(uint32_t instruction)
+{
+    const uint32_t targetIndex = instruction & 0x03FFFFFFU;
+
+    const uint32_t targetAddress = (pc_ & 0xF0000000U) | (targetIndex << 2);
+
+    registers_[31] = nextPc_;
+
+    nextPc_ = targetAddress;
+
+    std::cout << "  JAL 0x"
+              << std::hex << std::uppercase
+              << targetAddress
+              << " -> RA=0x" << registers_[31]
+              << '\n';
+}
+
+
+void Cpu::executeJr(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    const uint32_t targetAddress = registers_[rs];
+
+    nextPc_ = targetAddress;
+
+    std::cout << "  JR r"
+              << std::dec << rs
+              << " -> 0x"
+              << std::hex << std::uppercase
+              << targetAddress << '\n';
+}
+
+void Cpu::executeJalr(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rd = (instruction >> 11) & 0x1F;
+
+    const uint32_t targetAddress = registers_[rs];
+    const uint32_t returnAddress = nextPc_;
+
+    if (rd != 0) registers_[rd] = returnAddress;
+
+    nextPc_ = targetAddress;
+
+    std::cout << "  JALR r"
+              << std::dec << rd
+              << ", r" << rs
+              << " -> target=0x"
+              << std::hex << std::uppercase
+              << targetAddress
+              << " link=0x" << returnAddress
+              << '\n';
+}
