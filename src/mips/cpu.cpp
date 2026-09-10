@@ -863,3 +863,231 @@ void Cpu::executeJalr(uint32_t instruction)
               << " link=0x" << returnAddress
               << '\n';
 }
+
+void Cpu::executeBeq(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t targetAddress = pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = registers_[rs] == registers_[rt];
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BEQ r" << std::dec << rs
+              << ", r" << rt
+              << " -> " << (taken ? "taken" : "not taken");
+
+    if (taken)
+    {
+        std::cout << " target=0x"
+                  << std::hex << std::uppercase
+                  << targetAddress;
+    }
+
+    std::cout << '\n';
+}
+
+void Cpu::executeBne(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+    const uint32_t rt = (instruction >> 16) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const uint32_t targetAddress = pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = registers_[rs] != registers_[rt];
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BNE r" << std::dec << rs
+              << ", r" << rt
+              << " -> " << (taken ? "taken" : "not taken");
+
+    if (taken)
+    {
+        std::cout << " target=0x"
+                  << std::hex << std::uppercase
+                  << targetAddress;
+    }
+
+    std::cout << '\n';
+}
+
+void Cpu::executeBltz(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const int32_t source = static_cast<int32_t>(registers_[rs]);
+
+    const uint32_t targetAddress = pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = source < 0;
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BLTZ r" << std::dec << rs
+              << " -> " << (taken ? "taken" : "not taken");
+
+    if (taken)
+    {
+        std::cout << " target=0x"
+                  << std::hex << std::uppercase
+                  << targetAddress;
+    }
+
+    std::cout << '\n';
+}
+
+void Cpu::executeBgez(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const int32_t source = static_cast<int32_t>(registers_[rs]);
+
+    const uint32_t targetAddress = pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = source >= 0;
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BGEZ r" << std::dec << rs
+              << " -> " << (taken ? "taken" : "not taken");
+
+    if (taken)
+    {
+        std::cout << " target=0x"
+                  << std::hex << std::uppercase
+                  << targetAddress;
+    }
+
+    std::cout << '\n';
+}
+
+void Cpu::executeBgtz(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const int32_t source = static_cast<int32_t>(registers_[rs]);
+
+    const uint32_t targetAddress = pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = source > 0;
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BGTZ r" << std::dec << rs
+              << " -> " << (taken ? "taken" : "not taken");
+
+    if (taken)
+    {
+        std::cout << " target=0x"
+                  << std::hex << std::uppercase
+                  << targetAddress;
+    }
+
+    std::cout << '\n';
+}
+
+
+void Cpu::executeBlez(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const int32_t source = static_cast<int32_t>(registers_[rs]);
+
+    const uint32_t targetAddress =pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = source <= 0;
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BLEZ r" << std::dec << rs
+              << " -> " << (taken ? "taken" : "not taken");
+
+    if (taken)
+    {
+        std::cout << " target=0x"
+                  << std::hex << std::uppercase
+                  << targetAddress;
+    }
+
+    std::cout << '\n';
+}
+
+
+void Cpu::executeBltzal(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const int32_t source = static_cast<int32_t>(registers_[rs]);
+
+    const uint32_t targetAddress = pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = source < 0;
+
+    registers_[31] = nextPc_;
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BLTZAL r" << std::dec << rs
+              << " -> " << (taken ? "taken" : "not taken")
+              << " RA=0x"
+              << std::hex << std::uppercase
+              << registers_[31];
+
+    if (taken)
+        std::cout << " target=0x" << targetAddress;
+
+    std::cout << '\n';
+}
+
+void Cpu::executeBgezal(uint32_t instruction)
+{
+    const uint32_t rs = (instruction >> 21) & 0x1F;
+
+    const int32_t offset = static_cast<int16_t>(instruction & 0xFFFF);
+
+    const int32_t source = static_cast<int32_t>(registers_[rs]);
+
+    const uint32_t targetAddress = pc_ + static_cast<uint32_t>(offset * 4);
+
+    const bool taken = source >= 0;
+
+    registers_[31] = nextPc_;
+
+    if (taken)
+        nextPc_ = targetAddress;
+
+    std::cout << "  BGEZAL r" << std::dec << rs
+              << " -> " << (taken ? "taken" : "not taken")
+              << " RA=0x"
+              << std::hex << std::uppercase
+              << registers_[31];
+
+    if (taken)
+        std::cout << " target=0x" << targetAddress;
+
+    std::cout << '\n';
+}
