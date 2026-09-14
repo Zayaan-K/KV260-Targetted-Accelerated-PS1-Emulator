@@ -34,6 +34,10 @@ private:
     uint32_t expansion1BaseAddress_ = 0;
     uint32_t expansion1DelaySize_ = 0;
     uint32_t expansion2BaseAddress_ = 0;
+    uint32_t spuDelaySize_ = 0;
+    uint32_t expansion3DelaySize_ = 0;
+    uint32_t cdromDelaySize_      = 0;
+    uint32_t expansion2DelaySize_ = 0;
 
     static uint32_t virtualToPhysical(uint32_t address);
 

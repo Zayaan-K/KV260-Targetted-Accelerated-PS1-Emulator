@@ -150,6 +150,14 @@ uint32_t Bus::readMmio32(uint32_t address) const
             return expansion2BaseAddress_;
         case 0x1F801008:
             return expansion1DelaySize_;
+        case 0x1F801014:
+            return spuDelaySize_;
+        case 0x1F80100C:
+            return expansion3DelaySize_;
+        case 0x1F801018:
+            return cdromDelaySize_;
+        case 0x1F80101C:
+            return expansion2DelaySize_;
 
         default:
             break;
@@ -251,6 +259,62 @@ void Bus::writeMmio32(uint32_t address, uint32_t value)
                 << '\n';
 
             return; 
+        case 0x1F801014:
+            spuDelaySize_ = value;
+
+            std::cout
+                << "  MMIO SPU delay/size <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+            
+        case 0x1F80100C:
+            expansion3DelaySize_ = value;
+
+            std::cout
+                << "  MMIO Expansion 3 delay/size <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+
+        case 0x1F801018:
+            cdromDelaySize_ = value;
+
+            std::cout
+                << "  MMIO CD-ROM delay/size <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+
+        case 0x1F80101C:
+            expansion2DelaySize_ = value;
+
+            std::cout
+                << "  MMIO Expansion 2 delay/size <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+            
         default:
             break;
     }
