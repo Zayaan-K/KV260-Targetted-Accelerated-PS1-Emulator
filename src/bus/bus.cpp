@@ -140,9 +140,12 @@ uint32_t Bus::readMmio32(uint32_t address) const
     switch (address) {
         case 0x1F801010:
             return biosRomDelaySize_;
-
         case 0x1F801060:
             return ramSizeRegister_;
+        case 0x1F801020:
+            return commonDelayRegister_;
+        case 0x1F801000:
+            return expansion1BaseAddress_;
 
         default:
             break;
@@ -189,6 +192,34 @@ void Bus::writeMmio32(uint32_t address, uint32_t value)
 
             return;
 
+        case 0x1F801020:
+            commonDelayRegister_ = value;
+
+            std::cout
+                << "  MMIO Common delay <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;    
+
+        case 0x1F801000:
+            expansion1BaseAddress_ = value;
+
+            std::cout
+                << "  MMIO Expansion 1 base address <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+            
         default:
             break;
     }
