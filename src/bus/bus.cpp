@@ -13,7 +13,9 @@ Bus::Bus(const std::string& biosPath)
     std::ifstream file(biosPath, std::ios::binary);
 
     if (!file) {
-        throw std::runtime_error("Could not open BIOS: " + biosPath);
+        throw std::runtime_error(
+            "Could not open BIOS: " + biosPath
+        );
     }
 
     bios_ = std::vector<uint8_t>{
@@ -30,155 +32,176 @@ Bus::Bus(const std::string& biosPath)
 
 uint32_t Bus::virtualToPhysical(uint32_t address)
 {
-
-    if (address >= 0x80000000 &&
-        address <= 0x9FFFFFFF) {
+    // KSEG0: cached kernel address space.
+    if (address >= 0x80000000 && address <= 0x9FFFFFFF) {
         return address - 0x80000000;
     }
 
-
-    if (address >= 0xA0000000 &&
-        address <= 0xBFFFFFFF) {
+    // KSEG1: uncached kernel address space.
+    if (address >= 0xA0000000 && address <= 0xBFFFFFFF) {
         return address - 0xA0000000;
     }
 
-
-    if (address < 0x80000000) {
-        return address;
-    }
-
-    std::ostringstream message;
-    message << "Unsupported virtual address: 0x"
-            << std::hex << std::uppercase << address;
-
-    throw std::out_of_range(message.str());
+    return address;
 }
 
 uint8_t Bus::read8(uint32_t address) const
 {
     const uint32_t physical = virtualToPhysical(address);
 
-    if (physical < RAM_MIRROR_END) {
+    // The 2 MiB of RAM is mirrored throughout the first 8 MiB.
+    if (physical < 0x00800000) {
         return ram_[physical % RAM_SIZE];
     }
 
-    if (physical >= BIOS_BASE &&
-        physical < BIOS_BASE + BIOS_SIZE) {
-        return bios_[physical - BIOS_BASE];
+    if (physical >= BIOS_START && physical < BIOS_START + BIOS_SIZE) {
+        return bios_[physical - BIOS_START];
     }
 
     std::ostringstream message;
-    message << "8-bit read from unmapped address: 0x"
-            << std::hex << std::uppercase << physical;
 
-    throw std::out_of_range(message.str());
+    message << "Read8 from unmapped address: 0x"
+            << std::hex
+            << std::uppercase
+            << physical;
+
+    throw std::runtime_error(message.str());
 }
 
 uint16_t Bus::read16(uint32_t address) const
 {
-    return static_cast<uint16_t>(read8(address)) |
-           (static_cast<uint16_t>(read8(address + 1)) << 8);
+    const uint16_t byte0 = static_cast<uint16_t>(read8(address));
+    const uint16_t byte1 = static_cast<uint16_t>(read8(address + 1));
+
+    return static_cast<uint16_t>(
+        byte0 |
+        (byte1 << 8)
+    );
 }
 
 uint32_t Bus::read32(uint32_t address) const
 {
     const uint32_t physical = virtualToPhysical(address);
 
-    if (physical >= 0x1F801000 &&
-        physical <= 0x1F802FFF) {
+    if (physical >= MMIO_START && physical <= MMIO_END) {
         return readMmio32(physical);
     }
 
+    const uint32_t byte0 = static_cast<uint32_t>(read8(address));
+    const uint32_t byte1 = static_cast<uint32_t>(read8(address + 1));
+    const uint32_t byte2 = static_cast<uint32_t>(read8(address + 2));
+    const uint32_t byte3 = static_cast<uint32_t>(read8(address + 3));
 
-    return static_cast<uint32_t>(read8(address)) |
-           (static_cast<uint32_t>(read8(address + 1)) << 8) |
-           (static_cast<uint32_t>(read8(address + 2)) << 16) |
-           (static_cast<uint32_t>(read8(address + 3)) << 24);
+    return byte0 | (byte1 << 8) | (byte2 << 16) | (byte3 << 24);
 }
 
 void Bus::write8(uint32_t address, uint8_t value)
 {
     const uint32_t physical = virtualToPhysical(address);
 
-
-    if (physical < RAM_MIRROR_END) {
+    if (physical < 0x00800000) {
         ram_[physical % RAM_SIZE] = value;
         return;
     }
 
     std::ostringstream message;
-    message << "8-bit write to unmapped or read-only address: 0x"
-            << std::hex << std::uppercase << physical;
 
-    throw std::out_of_range(message.str());
+    message << "Write8 to unmapped or read-only address: 0x"
+            << std::hex
+            << std::uppercase
+            << physical;
+
+    throw std::runtime_error(message.str());
 }
 
 void Bus::write16(uint32_t address, uint16_t value)
 {
-
-    write8(address, static_cast<uint8_t>(value));
-    write8(address + 1, static_cast<uint8_t>(value >> 8));
+    write8(address,static_cast<uint8_t>(value & 0xFF));
+    write8(address + 1, static_cast<uint8_t>((value >> 8) & 0xFF));
 }
 
 void Bus::write32(uint32_t address, uint32_t value)
 {
     const uint32_t physical = virtualToPhysical(address);
 
-    if (physical >= 0x1F801000 &&
-        physical <= 0x1F802FFF) {
+    if (physical >= MMIO_START && physical <= MMIO_END) {
         writeMmio32(physical, value);
         return;
     }
 
-    write8(address, static_cast<uint8_t>(value));
-    write8(address + 1, static_cast<uint8_t>(value >> 8));
-    write8(address + 2, static_cast<uint8_t>(value >> 16));
-    write8(address + 3, static_cast<uint8_t>(value >> 24));
-}
-
-void Bus::writeMmio32(uint32_t address, uint32_t value)
-{
-    switch (address) {
-        case 0x1F801010:
-            expansion1Base_ = value;
-
-            std::cout << "  MMIO Expansion 1 base <- 0x"
-                      << std::hex
-                      << std::uppercase
-                      << std::setw(8)
-                      << std::setfill('0')
-                      << value
-                      << '\n';
-            return;
-
-        default: {
-            std::ostringstream message;
-            message << "Unhandled 32-bit MMIO write at 0x"
-                    << std::hex
-                    << std::uppercase
-                    << address
-                    << " value=0x"
-                    << value;
-
-            throw std::runtime_error(message.str());
-        }
-    }
+    write8(address,static_cast<uint8_t>(value & 0xFF));
+    write8(address + 1, static_cast<uint8_t>((value >> 8) & 0xFF));
+    write8(address + 2, static_cast<uint8_t>((value >> 16) & 0xFF));
+    write8(address + 3,static_cast<uint8_t>((value >> 24) & 0xFF) );
 }
 
 uint32_t Bus::readMmio32(uint32_t address) const
 {
     switch (address) {
         case 0x1F801010:
-            return expansion1Base_;
+            return biosRomDelaySize_;
 
-        default: {
-            std::ostringstream message;
-            message << "Unhandled 32-bit MMIO read at 0x"
-                    << std::hex
-                    << std::uppercase
-                    << address;
+        case 0x1F801060:
+            return ramSizeRegister_;
 
-            throw std::runtime_error(message.str());
-        }
+        default:
+            break;
     }
+
+    std::ostringstream message;
+
+    message << "Unhandled 32-bit MMIO read at 0x"
+            << std::hex
+            << std::uppercase
+            << address;
+
+    throw std::runtime_error(message.str());
 }
+
+void Bus::writeMmio32(uint32_t address, uint32_t value)
+{
+    switch (address) {
+        case 0x1F801010:
+            biosRomDelaySize_ = value;
+
+            std::cout
+                << "  MMIO BIOS ROM delay/size <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+
+        case 0x1F801060:
+            ramSizeRegister_ = value;
+
+            std::cout
+                << "  MMIO RAM size/config <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+
+        default:
+            break;
+    }
+
+    std::ostringstream message;
+
+    message << "Unhandled 32-bit MMIO write at 0x"
+            << std::hex
+            << std::uppercase
+            << address
+            << " value=0x"
+            << value;
+
+    throw std::runtime_error(message.str());
+}
+
