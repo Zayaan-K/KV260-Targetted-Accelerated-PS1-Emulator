@@ -83,7 +83,7 @@ uint32_t Bus::read32(uint32_t address) const
 {
     const uint32_t physical = virtualToPhysical(address);
 
-    if (physical >= MMIO_START && physical <= MMIO_END) {
+    if ((physical >= MMIO_START && physical <= MMIO_END) || physical == CACHE_CONTROL_ADDRESS) {
         return readMmio32(physical);
     }
 
@@ -124,7 +124,7 @@ void Bus::write32(uint32_t address, uint32_t value)
 {
     const uint32_t physical = virtualToPhysical(address);
 
-    if (physical >= MMIO_START && physical <= MMIO_END) {
+    if ((physical >= MMIO_START && physical <= MMIO_END) || physical == CACHE_CONTROL_ADDRESS) {
         writeMmio32(physical, value);
         return;
     }
@@ -158,6 +158,8 @@ uint32_t Bus::readMmio32(uint32_t address) const
             return cdromDelaySize_;
         case 0x1F80101C:
             return expansion2DelaySize_;
+        case CACHE_CONTROL_ADDRESS:
+            return cacheControlRegister_;
 
         default:
             break;
@@ -175,6 +177,7 @@ uint32_t Bus::readMmio32(uint32_t address) const
 
 void Bus::writeMmio32(uint32_t address, uint32_t value)
 {
+        
     switch (address) {
         case 0x1F801010:
             biosRomDelaySize_ = value;
@@ -272,7 +275,7 @@ void Bus::writeMmio32(uint32_t address, uint32_t value)
                 << '\n';
 
             return;
-            
+
         case 0x1F80100C:
             expansion3DelaySize_ = value;
 
@@ -306,6 +309,20 @@ void Bus::writeMmio32(uint32_t address, uint32_t value)
 
             std::cout
                 << "  MMIO Expansion 2 delay/size <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+
+        case CACHE_CONTROL_ADDRESS:
+            cacheControlRegister_ = value;
+
+            std::cout
+                << "  Cache control <- 0x"
                 << std::hex
                 << std::uppercase
                 << std::setw(8)

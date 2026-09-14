@@ -39,6 +39,9 @@ private:
     uint32_t cdromDelaySize_      = 0;
     uint32_t expansion2DelaySize_ = 0;
 
+    static constexpr uint32_t CACHE_CONTROL_ADDRESS = 0xFFFE0130;
+    uint32_t cacheControlRegister_ = 0;
+
     static uint32_t virtualToPhysical(uint32_t address);
 
     uint32_t readMmio32(uint32_t address) const;
