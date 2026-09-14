@@ -28,7 +28,7 @@ Bus::Bus(const std::string& biosPath)
     }
 }
 
-uint32_t Bus::virtualToPhysical(uint32_t address) const
+uint32_t Bus::virtualToPhysical(uint32_t address)
 {
 
     if (address >= 0x80000000 &&
