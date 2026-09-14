@@ -30,6 +30,7 @@ private:
     // Memory-control registers
     uint32_t biosRomDelaySize_ = 0;
     uint32_t ramSizeRegister_  = 0;
+    uint32_t commonDelayRegister_ = 0;
 
     static uint32_t virtualToPhysical(uint32_t address);
 

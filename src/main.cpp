@@ -10,7 +10,7 @@ int main()
         Bus bus{"bios/SCPH1001.BIN"};
         Cpu cpu{bus};
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 50; ++i) {
             cpu.step();
         }
     }
