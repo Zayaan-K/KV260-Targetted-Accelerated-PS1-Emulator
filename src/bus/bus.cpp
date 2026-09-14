@@ -146,6 +146,8 @@ uint32_t Bus::readMmio32(uint32_t address) const
             return commonDelayRegister_;
         case 0x1F801000:
             return expansion1BaseAddress_;
+        case 0x1F801004:
+            return expansion2BaseAddress_;
 
         default:
             break;
@@ -211,6 +213,20 @@ void Bus::writeMmio32(uint32_t address, uint32_t value)
 
             std::cout
                 << "  MMIO Expansion 1 base address <- 0x"
+                << std::hex
+                << std::uppercase
+                << std::setw(8)
+                << std::setfill('0')
+                << value
+                << '\n';
+
+            return;
+            
+        case 0x1F801004:
+            expansion2BaseAddress_ = value;
+
+            std::cout
+                << "  MMIO Expansion 2 base address <- 0x"
                 << std::hex
                 << std::uppercase
                 << std::setw(8)
